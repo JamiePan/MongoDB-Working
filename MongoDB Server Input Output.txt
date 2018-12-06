@@ -1,0 +1,108 @@
+Life <- mongo (collection = "DeathRates&LifeExpectancy", db= "FIT5141")
+Life <- Life$find()
+
+Life%>%group_by(Race)%>%summarise(Count=n())%>%arrange(desc(Count))%>%head()
+Life%>%group_by(Sex)%>%summarise(Count=n())%>%arrange(desc(Count))%>%head()
+
+
+install.packages ("Hmisc")
+library (Hmisc)
+describe (AllBoth)
+
+Female = Life$Sex =='Female'
+AllFemale = Life[All&Female,]
+colnames(AllFemale)[which(names(AllFemale) == "Average Life Expectancy (Years)")]<- " Average_Age"
+sta.desc(AllFemale)
+
+install.packages("gridExtra")
+library("gridExtra")
+library(ggplot2)
+Life_Expentency_All <- na.omit(Life_Expentency_All)
+p1 <- ggplot(Life_Expentency_All, aes(x=Year, y=Average_Age, colour=Sex)) 
++ geom_line() + ggtitle("The Life Expectency over All Race in different Sexes")
+p2 <- ggplot(Life_Expentency_All, aes(x=Year, y=Average_Age, colour=Race)) 
++ geom_line() + ggtitle("The Life Expectency over All Sexes in different Races")
+bp <- ggplot(Life_Expentency_All, aes(x=Year, y=Average_Age, color=Sex)) + geom_boxplot() 
+bp2 <- ggplot(Life_Expentency_All, aes(x=Year, y=Average_Age, color=Race)) + geom_boxplot() 
+grid.arrange(p1,p2,bp,bp2,ncol=2)
+
+install.packages('GGally')
+install.packages('dplyr')
+require(GGally)
+library(ggplot2)
+library("GGally")
+AllBoth_Update <- AllBoth_Update[,c(1,3,4,5)]
+GGally::ggpairs(as.data.frame(AllBoth_Update[,1:4]))
+
+
+library(MASS)
+mytable <- xtabs(~Year+Average_Age, data=Life)
+loglm(~Year+Average_Age, mytable)
+
+
+install.packages("gridExtra")
+library(ggplot2)
+library("gridExtra")
+
+AllRace_Female <- ggplot(AllBoth_Update, aes(x=Year, y=Female)) +  geom_smooth()+ geom_line() + ggtitle("Life Expectency of Female (in All Race)")
+AllRace_Male <- ggplot(AllBoth_Update, aes(x=Year, y=Male)) +  geom_smooth()+ geom_line() + ggtitle("Life Expectency of Female (in All Race)")
+Black_Male <- ggplot(AllBoth_Update, aes(x=Year, y=Male_1)) +  geom_smooth()+ geom_line() + ggtitle("Life Expectency of Male (Only Black)")
+Black_Female <- ggplot(AllBoth_Update, aes(x=Year, y=Female_1)) +  geom_smooth()+ geom_line() + ggtitle("Life Expectency of Female (Only Black)")
+White_Female <- ggplot(AllBoth_Update, aes(x=Year, y=Female_2)) +  geom_smooth()+ geom_line() + ggtitle("Life Expectency of Female (Only White)")
+White_Male <- ggplot(AllBoth_Update, aes(x=Year, y=Male_2)) +  geom_smooth()+ geom_line() + ggtitle("Life Expectency of Male (Only White)")
+grid.arrange(AllRace_Female,AllRace_Male,Black_Female,Black_Male,White_Female,White_Male,ncol=2)
+
+
+library(MASS)
+All_Races_Female <- xtabs(~Year+Female, data=AllBoth_Update)
+loglm(~Year+Female, All_Races_Female)
+All_Races_Male <- xtabs(~Year+Male, data=AllBoth_Update)
+loglm(~Year+Male, All_Races_Male)
+Black_Male <- xtabs(~Year+Male_1, data=AllBoth_Update)
+loglm(~Year+Male_1, Black_Male)
+Black_Female <- xtabs(~Year+Female_1, data=AllBoth_Update)
+loglm(~Year+Female_1, Black_Female)
+White_Female <- xtabs(~Year+Female_2, data=AllBoth_Update)
+loglm(~Year+Female_2, White_Female)
+White_Male <- xtabs(~Year+Male_2, data=AllBoth_Update)
+loglm(~Year+Male_2, White_Male)
+
+
+library(forecast)
+library("gridExtra")
+library(readr)
+Life_Expentency_All <- read_csv("Life_Expentency_All.csv")
+AllRace_Female <- Life_Expentency_All[,c("Year","Female")]
+
+fcast <- forecast(AllRace_Female$Female)
+autoplot(fcast) 
+af <- ggplot(data=AllRace_Female,aes(x=Year,y=Female))+geom_line(col='red')+  geom_smooth()+ geom_forecast(h=50) + ggtitle("Forecasts of Life Expectancy using regression (only for Female of All race)")
+
+Black_Female <- Life_Expentency_All[,c("Year","Female_1")]
+fcast <- forecast(Black_Female $Female-1)
+autoplot(fcast)
+bf <- ggplot(data=Black_Female,aes(x=Year,y=Female_1))+geom_line(col='red')+  geom_smooth()+ geom_forecast(h=50) + ggtitle("Forecasts of Life Expectancy using regression (only for Female of Black)")
+
+White_Female <- Life_Expentency_All[,c("Year","Female_2")]
+fcast <- forecast(White_Female $Female_2)
+
+autoplot(fcast)
+wf <- ggplot(data=White_Female,aes(x=Year,y=Female_2))+geom_line(col='red')+  geom_smooth()+ geom_forecast(h=50) + ggtitle("Forecasts of Life Expectancy using regression (only for Female of White)")
+
+White_Male <- Life_Expentency_All[,c("Year","Male_2")]
+fcast <- forecast(White_Male $ Male_2)
+autoplot(fcast)
+wm <- ggplot(data=White_Male,aes(x=Year,y=Male_2))+geom_line(col='red')+  geom_smooth()+ geom_forecast(h=50) + ggtitle("Forecasts of Life Expectancy using regression (only for Male of White)")
+
+Black_Male <- Life_Expentency_All[,c("Year","Male_1")]
+fcast <- forecast(Black_Male $Male_1)
+autoplot(fcast)
+bm <- ggplot(data=Black_Male,aes(x=Year,y=Male_1))+geom_line(col='red')+  geom_smooth()+ geom_forecast(h=50) + ggtitle("Forecasts of Life Expectancy using regression (only for Male of Black)")
+
+All_Male <- Life_Expentency_All[,c("Year","Male")]
+fcast <- forecast(All_Male $Male)
+autoplot(fcast)
+am <- ggplot(data=All_Male,aes(x=Year,y=Male))+geom_line(col='red')+  geom_smooth()+ geom_forecast(h=50) + ggtitle("Forecasts of Life Expectancy using regression (only for Male of AllRace)")
+
+grid.arrange(af,am,bf,bm,wf,wm,ncol=2)
+
